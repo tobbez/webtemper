@@ -1,0 +1,18 @@
+webtemper - a simple temperature graphing package for the web
+Copyright (c) 2010, Torbjörn Lönnemark <tobbez@ryara.net>
+
+Requirements:
+* DigiTemp
+* MySQL
+* Web server with PHP
+
+Installation:
+1. Setup a mysql database and import schema.sql
+2. Make sure digitemp is installed and working
+3. Go to the webtemper directory and run ./temperature.py setup
+   and then follow the instructions.
+4. Setup a cron job that runs /path/to/webtemper/temperature.py update
+5. Symlink the 'web' subdirectory into your webroot.
+
+License:
+webtemper is released under the ISC License.
