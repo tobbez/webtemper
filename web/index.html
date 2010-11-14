@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Temperature</title>
+<script src="jquery-1.4.3.min.js" type="text/javascript"></script>
+<script src="jquery.flot-0.6.min.js" type="text/javascript"></script>
+<script type="text/javascript">
+function refresh() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'ajax.php', false);
+    xhr.send(null);
+    var json = JSON.parse(xhr.responseText);
+
+    /* account for timezones */
+    for (var i = 0; i < json.length; ++i) {
+        for (var j = 0; j < json[i]['data'].length; ++j) {
+            json[i]['data'][j][0] = json[i]['data'][j][0] - (new Date().getTimezoneOffset() * 60 * 1000);
+        }
+    }
+
+    $.plot($('#plot'),
+           json,
+           {
+             'xaxis':  {
+                         'mode':  'time',
+                         'ticks': 24
+                       },
+             'legend': {
+                         'show': 'true',
+                         'position': 'nw',
+                         'margin': [0, -30],
+                         'noColumns': json.length
+                       },
+             'series': {
+                         'points': {
+                                     'show': true
+                                   }, 
+                         'lines':  {
+                                     'show': true
+                                   }
+                       },
+             'grid':   { 
+                         'hoverable': true 
+                       }
+           });
+}
+
+function showTooltip(x, y, contents) {
+    $('<div id="tooltip">' + contents + '</div>').css( {
+        'position': 'absolute',
+        'display': 'none',
+        'top': y - 35,
+        'left': x - 30,
+        'border': '1px solid #ddf',
+        'padding': '2px',
+        'background-color': '#eef',
+        'opacity': 0.80
+    }).appendTo("body").fadeIn(100);
+}
+
+
+function pad(num, len) {
+    var s = String(num);
+    while(s.length < len) {
+        s = '0' + s;
+    }
+    return s;
+}
+
+function formatTime(t) {
+    var d = new Date(parseInt(t));
+    return pad(d.getUTCHours(), 2) + ':' + pad(d.getUTCMinutes(), 2) + ':' + pad(d.getUTCSeconds(),2);
+}
+
+$(function () {
+    refresh();
+
+    var previousPoint = null;
+    $("#plot").bind("plothover", function (event, pos, item) {
+        if (item) {
+            if (previousPoint != item.datapoint) {
+                previousPoint = item.datapoint;
+
+                $("#tooltip").remove();
+                var x = item.datapoint[0].toFixed(2),
+                    y = item.datapoint[1].toFixed(2);
+                    
+                showTooltip(item.pageX, item.pageY,
+                            y + " @ " + formatTime(x));
+            }
+        } else {
+            $("#tooltip").remove();
+            previousPoint = null;            
+        }
+    });
+
+    setInterval("refresh();", 30000);
+});
+</script>
+</head>
+<body>
+  <div style="margin-top: 30px;">
+    <div id="plot" style="width: 1280px; height: 600px;"></div>
+  </div>
+  <div id="overview"></div>
+</body>
+</html>
